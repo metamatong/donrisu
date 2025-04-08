@@ -5,12 +5,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # For quick testing, not recommended in production
 
-
-
 def chat_page(request):
     """Renders the main chat UI."""
     return render(request, 'chat/chat.html')
-
 
 @csrf_exempt  # For simplicity; otherwise you’ll need to handle CSRF tokens in JS
 def send_message(request):
@@ -18,7 +15,6 @@ def send_message(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         user_message = data.get('message', '')
-
 
         url = "https://api.anthropic.com/v1/messages"
         headers = {
@@ -39,13 +35,19 @@ def send_message(request):
 
         if response.status_code == 200:
             response_data = response.json()
-            # Anthropic typically returns structured data under keys like 'completion' or 'messages'
-            # For example, if you get something like `response_data["completion"]`, parse that out:
-            # Adjust parsing logic to your actual Anthropic response structure
-            completion_text = response_data.get('completion', '[No completion key in response]')
+            # Extract the text from the content list (as returned by Claude)
+            content_items = response_data.get('content', [])
+            if content_items and isinstance(content_items, list):
+                # Assume the first item is the reply
+                completion_text = content_items[0].get('text', '[No text in content]')
+            else:
+                completion_text = '[No content provided]'
 
             return JsonResponse({"reply": completion_text})
         else:
-            return JsonResponse({"error": "Request to Anthropic failed", "status_code": response.status_code})
+            return JsonResponse({
+                "error": "Request to Anthropic failed",
+                "status_code": response.status_code
+            })
     else:
         return JsonResponse({"error": "Invalid request method. POST expected."}, status=400)
