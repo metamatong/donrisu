@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>My Chat Page</title>
+    <style>
+        /* Basic styling — feel free to adjust */
+        body { font-family: sans-serif; margin: 2rem; }
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 400px;
+            margin: 0 auto;
+        }
+        .message { margin: 0.5rem 0; }
+        .user-message { font-weight: bold; color: blue; }
+        .bot-reply { font-weight: normal; color: green; }
+        #input-container {
+            margin-top: 1rem;
+        }
+        #message-input {
+            width: 100%;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Chat with Claude</h1>
+<div id="chat-container">
+    <!-- Chat messages will appear here -->
+    <div id="messages"></div>
+
+    <!-- Input form -->
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message..."/>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+function addMessageToChat(content, className) {
+    const messagesDiv = document.getElementById("messages");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message", className);
+    messageDiv.innerText = content;
+    messagesDiv.appendChild(messageDiv);
+}
+
+async function sendMessage() {
+    const inputField = document.getElementById('message-input');
+    const userMessage = inputField.value.trim();
+    if (!userMessage) return;
+
+    // Display user message in the chat UI
+    addMessageToChat(userMessage, "user-message");
+    inputField.value = "";
+
+    try {
+        const response = await fetch("/chat/send_message/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+                // If you remove @csrf_exempt in views.py, you'll need to attach the CSRF token here.
+            },
+            body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        if (data.reply) {
+            addMessageToChat(data.reply, "bot-reply");
+        } else if (data.error) {
+            addMessageToChat("Error: " + data.error, "bot-reply");
+        } else {
+            addMessageToChat("Unexpected response.", "bot-reply");
+        }
+    } catch (err) {
+        addMessageToChat("Request failed. Check console/logs.", "bot-reply");
+        console.error(err);
+    }
+}
+</script>
+
+</body>
+</html>
