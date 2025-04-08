@@ -34,7 +34,7 @@ DEBUG = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static/'
 
-ALLOWED_HOSTS = ['donrisu.vercel.app']
+ALLOWED_HOSTS = ['.vercel.app']
 
 
 # Application definition
