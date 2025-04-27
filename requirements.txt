@@ -13,3 +13,4 @@ django-crispy-forms==2.1
 channels==4.0.0
 redis==5.0.1
 dj-database-url
+psycopg2-binary
