@@ -9,6 +9,7 @@ from django.contrib import messages
 from .models import Character, ChatMessage, ResponseOption
 from django.views.decorators.http import require_POST
 from django.urls import reverse
+from .services.risu_api import get_risu_response
 
 def chat_page(request):
     """Renders the main chat UI."""
@@ -20,40 +21,8 @@ def send_message(request):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
         user_message = data.get('message', '')
-
-        url = "https://api.anthropic.com/v1/messages"
-        headers = {
-            "x-api-key": os.environ['ANTHROPIC_API_KEY'],
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
-        }
-        payload = {
-            "model": "claude-3-5-sonnet-20241022",  # Example model name
-            "max_tokens": 1024,
-            "messages": [
-                {"role": "user", "content": user_message}
-            ]
-        }
-
-        # Make the request
-        response = requests.post(url, headers=headers, json=payload)
-
-        if response.status_code == 200:
-            response_data = response.json()
-            # Extract the text from the content list (as returned by Claude)
-            content_items = response_data.get('content', [])
-            if content_items and isinstance(content_items, list):
-                # Assume the first item is the reply
-                completion_text = content_items[0].get('text', '[No text in content]')
-            else:
-                completion_text = '[No content provided]'
-
-            return JsonResponse({"reply": completion_text})
-        else:
-            return JsonResponse({
-                "error": "Request to Anthropic failed",
-                "status_code": response.status_code
-            })
+        reply = get_risu_response(user_message)
+        return JsonResponse({"reply": reply})
     else:
         return JsonResponse({"error": "Invalid request method. POST expected."}, status=400)
 
@@ -206,53 +175,6 @@ def chat_room(request, character_id):
         'messages': messages,
         'response_options': response_options,
     })
-
-@login_required
-@require_POST
-def send_message(request):
-    try:
-        data = json.loads(request.body)
-        character_id = data.get('character_id')
-        message_content = data.get('message')
-        
-        character = get_object_or_404(Character, id=character_id, user=request.user)
-        
-        # Create user message
-        user_message = ChatMessage.objects.create(
-            character=character,
-            user=request.user,
-            content=message_content,
-            is_user=True
-        )
-        
-        # Create character response (this would be replaced with AI generation)
-        character_message = ChatMessage.objects.create(
-            character=character,
-            user=request.user,
-            content="This is a sample response from the character.",
-            is_user=False
-        )
-        
-        # Create response options
-        ResponseOption.objects.create(
-            message=character_message,
-            content="Option 1: Agree with the character",
-            order=0
-        )
-        ResponseOption.objects.create(
-            message=character_message,
-            content="Option 2: Disagree politely",
-            order=1
-        )
-        ResponseOption.objects.create(
-            message=character_message,
-            content="Option 3: Change the subject",
-            order=2
-        )
-        
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
 
 @login_required
 @require_POST
