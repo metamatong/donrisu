@@ -11,23 +11,19 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 import dj_database_url
-
-def get_env_filename():
-    return os.environ.get('ENV_FILENAME', '.env')
-
-# Import env variables
-load_dotenv(find_dotenv(get_env_filename()))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env at project root
+load_dotenv(str(BASE_DIR / '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-development-key')  # fallback for local dev
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -99,13 +95,15 @@ WSGI_APPLICATION = 'don_risu.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.environ.get('DJANGO_PRODUCTION', '').lower() == 'true':
-    # Production: use the database URL from environment
+# Database configuration
+db_url = os.environ.get('DATABASE_URL')
+if db_url:
+    # Use Postgres (or other) database URL from environment
     DATABASES = {
-        'default': dj_database_url.config(default=os.environ['DATABASE_URL'])
+        'default': dj_database_url.parse(db_url, conn_max_age=600)
     }
 else:
-    # Development: fallback to SQLite
+    # Default to SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
