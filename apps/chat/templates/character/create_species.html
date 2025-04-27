@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static chat_extras %}
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
+    <form method="post" class="w-full max-w-sm space-y-6 bg-white p-6 rounded-lg shadow">
+        {% csrf_token %}
+        <h2 class="text-xl font-bold text-center mb-4">Choose a Species & Appearance</h2>
+        <!-- Tabs for species -->
+        <div class="flex justify-center mb-4">
+            {% for value, label in species_tabs %}
+                <a href="?species={{ value }}" class="px-4 py-2 mx-1 rounded-t-lg font-semibold {% if selected_species == value %}bg-indigo-600 text-white{% else %}bg-indigo-100 text-indigo-800{% endif %}">
+                    Species {{ forloop.counter }}
+                </a>
+            {% endfor %}
+        </div>
+        {% with appearances_list=appearances|dict_key:selected_species %}
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            {% for value, label in appearances_list %}
+            <label class="flex flex-col items-center cursor-pointer">
+                <input type="radio" name="appearance" value="{{ value }}" class="sr-only" required>
+                <div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
+                    <img src="{% static 'character/appearances/testplaceholder.png' %}" alt="{{ label }}" class="object-cover w-full h-full">
+                </div>
+                <span class="text-sm text-gray-700">{{ label }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        {% endwith %}
+        <input type="hidden" name="species" value="{{ selected_species }}">
+        <button type="submit" class="w-full py-3 rounded-lg bg-indigo-600 text-white font-semibold text-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Next</button>
+    </form>
+</div>
+{% endblock %} 

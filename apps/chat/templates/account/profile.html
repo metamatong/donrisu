@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Profile Information
+                </h3>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">
+                            Email address
+                        </dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ user.email }}
+                        </dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">
+                            Date joined
+                        </dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ user.date_joined|date:"F j, Y" }}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Your Characters
+                </h3>
+                <a href="{% url 'character_create_background' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Create New Character
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {% for character in characters %}
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <img class="h-12 w-12 rounded-full" src="{% static 'character/appearances/testplaceholder.png' %}" alt="{{ character.species }}">
+                            </div>
+                            <div class="ml-4">
+                                <h4 class="text-lg font-medium text-gray-900">
+                                    {{ character.get_species_display }}
+                                </h4>
+                                <p class="text-sm text-gray-500">
+                                    {{ character.get_background_display }} • {{ character.get_relationship_display }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-500">
+                                Dynamic: {{ character.get_dynamic_display }}
+                            </p>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <a href="{% url 'chat_room' character.id %}" 
+                               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Start Chat
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No characters</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new character.</p>
+                    <div class="mt-6">
+                        <a href="{% url 'character_create_background' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Create Character
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Create a New Character
+                </h3>
+                <form method="POST" class="mt-5 space-y-6">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label for="species" class="block text-sm font-medium text-gray-700">Species</label>
+                        <select id="species" name="species" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select a species</option>
+                            <option value="human">Human</option>
+                            <option value="elf">Elf</option>
+                            <option value="vampire">Vampire</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="appearance" class="block text-sm font-medium text-gray-700">Appearance</label>
+                        <div class="mt-2 grid grid-cols-2 gap-4">
+                            <div class="relative">
+                                <input type="radio" name="appearance" value="appearance1" id="appearance1" required
+                                       class="sr-only">
+                                <label for="appearance1" class="relative block w-full p-4 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                                    <span class="text-sm font-medium text-gray-900">Appearance 1</span>
+                                    <p class="mt-1 text-xs text-gray-500">Classic and elegant</p>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="appearance" value="appearance2" id="appearance2" required
+                                       class="sr-only">
+                                <label for="appearance2" class="relative block w-full p-4 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                                    <span class="text-sm font-medium text-gray-900">Appearance 2</span>
+                                    <p class="mt-1 text-xs text-gray-500">Modern and stylish</p>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="appearance" value="appearance3" id="appearance3" required
+                                       class="sr-only">
+                                <label for="appearance3" class="relative block w-full p-4 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                                    <span class="text-sm font-medium text-gray-900">Appearance 3</span>
+                                    <p class="mt-1 text-xs text-gray-500">Casual and friendly</p>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="appearance" value="appearance4" id="appearance4" required
+                                       class="sr-only">
+                                <label for="appearance4" class="relative block w-full p-4 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                                    <span class="text-sm font-medium text-gray-900">Appearance 4</span>
+                                    <p class="mt-1 text-xs text-gray-500">Mysterious and alluring</p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="background" class="block text-sm font-medium text-gray-700">Background</label>
+                        <select id="background" name="background" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select a background</option>
+                            <option value="real_life">Real Life</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="school">School</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="relationship" class="block text-sm font-medium text-gray-700">Relationship</label>
+                        <select id="relationship" name="relationship" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select a relationship</option>
+                            <option value="bully">Bully Girl</option>
+                            <option value="best_friend">Best Friend</option>
+                            <option value="stepmom">Stepmom</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="dynamic" class="block text-sm font-medium text-gray-700">Dynamic</label>
+                        <select id="dynamic" name="dynamic" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select a dynamic</option>
+                            <option value="thunder">Thunder</option>
+                            <option value="submissive">Submissive</option>
+                            <option value="dominant">Dominant</option>
+                            <option value="ntr">NTR</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Create Character
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const appearanceInputs = document.querySelectorAll('input[name="appearance"]');
+    appearanceInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            appearanceInputs.forEach(i => {
+                i.parentElement.querySelector('label').classList.remove('ring-2', 'ring-indigo-500');
+            });
+            this.parentElement.querySelector('label').classList.add('ring-2', 'ring-indigo-500');
+        });
+    });
+});
+</script>
+{% endblock %} 
