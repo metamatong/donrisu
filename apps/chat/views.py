@@ -15,16 +15,52 @@ def chat_page(request):
     """Renders the main chat UI."""
     return render(request, 'chat/chat.html')
 
-@csrf_exempt  # For simplicity; otherwise you'll need to handle CSRF tokens in JS
+@login_required
+@require_POST
 def send_message(request):
-    """Handles the AJAX/Fetch request to call Anthropic's API."""
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        user_message = data.get('message', '')
-        reply = get_risu_response(user_message)
-        return JsonResponse({"reply": reply})
-    else:
-        return JsonResponse({"error": "Invalid request method. POST expected."}, status=400)
+    data = json.loads(request.body)
+    character_id = data.get('character_id')
+    message_content = data.get('message')
+    character = get_object_or_404(Character, id=character_id, user=request.user)
+
+    # Save user message
+    user_message = ChatMessage.objects.create(
+        character=character,
+        user=request.user,
+        content=message_content,
+        is_user=True
+    )
+
+    # Get Claude response
+    reply = get_risu_response(message_content)
+
+    # Save Claude reply
+    character_message = ChatMessage.objects.create(
+        character=character,
+        user=request.user,
+        content=reply,
+        is_user=False
+    )
+
+    # Only create new options if not in custom chat mode
+    if not request.session.get('custom_chat_mode', False):
+        ResponseOption.objects.create(
+            message=character_message,
+            content="New Option 1: Continue the conversation",
+            order=0
+        )
+        ResponseOption.objects.create(
+            message=character_message,
+            content="New Option 2: Take a different approach",
+            order=1
+        )
+        ResponseOption.objects.create(
+            message=character_message,
+            content="메시지 직접 입력하기",
+            order=2
+        )
+
+    return JsonResponse({"reply": reply})
 
 @login_required
 def profile(request):
@@ -162,64 +198,91 @@ def character_create_confirm(request):
 def chat_room(request, character_id):
     character = get_object_or_404(Character, id=character_id, user=request.user)
     messages = ChatMessage.objects.filter(character=character)
-    
+
+    custom_chat_mode = request.session.get('custom_chat_mode', False)
+
+    # If no messages exist and not in custom chat mode, create initial system message and options
+    if not messages.exists() and not custom_chat_mode:
+        initial_message = ChatMessage.objects.create(
+            character=character,
+            user=request.user,
+            content="Choose how to start the conversation.",
+            is_user=False
+        )
+        ResponseOption.objects.create(
+            message=initial_message,
+            content="New Option 1: Continue the conversation",
+            order=0
+        )
+        ResponseOption.objects.create(
+            message=initial_message,
+            content="New Option 2: Take a different approach",
+            order=1
+        )
+        ResponseOption.objects.create(
+            message=initial_message,
+            content="메시지 직접 입력하기",
+            order=2
+        )
+        messages = ChatMessage.objects.filter(character=character)
+
     # Get the last message's response options, if any
     response_options = []
-    if messages.exists():
+    if messages.exists() and not custom_chat_mode:
         last_message = messages.last()
-        if not last_message.is_user:  # If last message was from character
+        if not last_message.is_user:
             response_options = last_message.response_options.all()
-    
+
     return render(request, 'chat/chat_room.html', {
         'character': character,
         'messages': messages,
         'response_options': response_options,
+        'custom_chat_mode': custom_chat_mode,
     })
 
 @login_required
 @require_POST
 def send_response(request):
-    try:
-        data = json.loads(request.body)
-        option_id = data.get('option_id')
-        character_id = data.get('character_id')
-        
-        option = get_object_or_404(ResponseOption, id=option_id)
-        character = get_object_or_404(Character, id=character_id, user=request.user)
-        
-        # Create user message from selected option
-        user_message = ChatMessage.objects.create(
-            character=character,
-            user=request.user,
-            content=option.content,
-            is_user=True
-        )
-        
-        # Create character response (this would be replaced with AI generation)
+    data = json.loads(request.body)
+    option_id = data.get('option_id')
+    character_id = data.get('character_id')
+    option = get_object_or_404(ResponseOption, id=option_id)
+    character = get_object_or_404(Character, id=character_id, user=request.user)
+
+    # Save user message
+    user_message = ChatMessage.objects.create(
+        character=character,
+        user=request.user,
+        content=option.content,
+        is_user=True
+    )
+
+    if option.content == '메시지 직접 입력하기':
+        request.session['custom_chat_mode'] = True
+        return JsonResponse({'status': 'success'})
+    else:
+        # Use the preset response (simulate or fetch from PreMadeResponse if needed)
         character_message = ChatMessage.objects.create(
             character=character,
             user=request.user,
             content="This is a sample response to your choice.",
             is_user=False
         )
-        
-        # Create new response options
-        ResponseOption.objects.create(
-            message=character_message,
-            content="New Option 1: Continue the conversation",
-            order=0
-        )
-        ResponseOption.objects.create(
-            message=character_message,
-            content="New Option 2: Take a different approach",
-            order=1
-        )
-        ResponseOption.objects.create(
-            message=character_message,
-            content="New Option 3: Express your feelings",
-            order=2
-        )
-        
+        # Create new response options as before, only if not in custom chat mode
+        if not request.session.get('custom_chat_mode', False):
+            ResponseOption.objects.create(
+                message=character_message,
+                content="New Option 1: Continue the conversation",
+                order=0
+            )
+            ResponseOption.objects.create(
+                message=character_message,
+                content="New Option 2: Take a different approach",
+                order=1
+            )
+            ResponseOption.objects.create(
+                message=character_message,
+                content="메시지 직접 입력하기",
+                order=2
+            )
         return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
